@@ -4,9 +4,6 @@ import java.nio.file.Path;
 import java.util.Scanner;
 
 public class Main {
-    public static boolean isFileExists(File file) {
-        return file.isFile();
-    }
 
     public static void main(String[] args) {
         int count = 1;
