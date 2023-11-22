@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
@@ -17,6 +18,10 @@ public class Main {
             boolean isDirectory = file.isDirectory();
             boolean fileExists = file.exists();
             boolean fileNotExists = Files.notExists(Path.of(path));
+
+            int totalRequests = 0;
+            int googleBotCount = 0;
+            int yandexBotCount = 0;
 
             if (isDirectory) {
                 System.out.println("Указан путь не к файлу");
@@ -51,8 +56,6 @@ public class Main {
 
                 while ((line = reader.readLine()) != null) {
                     totalLines++;
-                    maxLength = Math.max(maxLength, line.length());
-                    minLength = Math.min(minLength, line.length());
 
                     if (line.length() > 1024) {
                         throw new MyExeptionClass("Строка в файле длиннее 1024 символов");
@@ -61,18 +64,49 @@ public class Main {
                 }
 
                 System.out.println("Общее количество строк в файле: " + totalLines);
-                System.out.println("Длина самой длинной строки в файле: " + maxLength);
-                System.out.println("Длина самой короткой строки в файле: " + minLength);
 
                 reader.close();
             } catch (Exception e) {
                 System.out.println("Ошибка: " + e.getMessage());
             }
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(path));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String useragentPart = getuseragentPart(line);
+
+                    if (useragentPart.contains("Googlebot")) {
+                        googleBotCount++;
+                    } else if (useragentPart.contains("YandexBot")) {
+                        yandexBotCount++;
+                    }
+
+                    totalRequests++;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            double googleBotRatio = (double) googleBotCount / totalRequests;
+            double yandexBotRatio = (double) yandexBotCount / totalRequests;
+
+            System.out.println("Доля запросов от GoogleBot: " + googleBotRatio);
+            System.out.println("Доля запросов от YandexBot: " + yandexBotRatio);
         }
     }
 
+    private static String getuseragentPart(String line) {
+
+        String firstBrackets = line.substring(line.indexOf("(compatible") + 1);
+        String[] parts = firstBrackets.split(";");
+        if (parts.length >= 2) {
+            String fragment = parts[1];
+            int slashIndex = fragment.indexOf("/");
+            if (slashIndex != -1) {
+                fragment = fragment.substring(0, slashIndex);
+            }
+            return fragment;
+        }
+        return "";
+    }
 }
-
-
-
-
