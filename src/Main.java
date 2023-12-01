@@ -1,10 +1,7 @@
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
-import java.io.BufferedReader;
-import java.io.FileReader;
 
 public class Main {
     public static void main(String[] args) {
@@ -22,6 +19,8 @@ public class Main {
             int totalRequests = 0;
             int googleBotCount = 0;
             int yandexBotCount = 0;
+
+            Statistics statistics = new Statistics();
 
             if (isDirectory) {
                 System.out.println("Указан путь не к файлу");
@@ -72,9 +71,11 @@ public class Main {
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(path));
                 String line;
+
                 while ((line = reader.readLine()) != null) {
                     String useragentPart = getuseragentPart(line);
-
+                    LogEntry logEntry = new LogEntry(line);
+                    statistics.addEntry(logEntry);
                     if (useragentPart.contains("Googlebot")) {
                         googleBotCount++;
                     } else if (useragentPart.contains("YandexBot")) {
@@ -84,7 +85,7 @@ public class Main {
                     totalRequests++;
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Строка содержит не полные данные");
             }
 
             double googleBotRatio = (double) googleBotCount / totalRequests;
@@ -92,7 +93,33 @@ public class Main {
 
             System.out.println("Доля запросов от GoogleBot: " + googleBotRatio);
             System.out.println("Доля запросов от YandexBot: " + yandexBotRatio);
+
+            System.out.println("Statistics: " + statistics.getTrafficRate());
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(path));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    LogEntry logEntry = new LogEntry(line);
+                    UserAgent userAgent = new UserAgent(line);
+
+                    System.out.println("IP Address: " + logEntry.getIpAddress());
+                    System.out.println("Date/Time: " + logEntry.getDateTime());
+                    System.out.println("Method: " + logEntry.getHttpMethod());
+                    System.out.println("Path: " + logEntry.getPath());
+                    System.out.println("Response Code: " + logEntry.getResponseCode());
+                    System.out.println("Data Size: " + logEntry.getDataSize());
+                    System.out.println("HTTPS Referer: " + logEntry.getProtocol());
+                    System.out.println("OS: " + userAgent.getOs());
+                    System.out.println("Browser: " + userAgent.getBrowser());
+
+
+                }
+
+            } catch (Exception e) {
+                System.out.println("Ошибка: " + e.getMessage());
+            }
         }
+
     }
 
     private static String getuseragentPart(String line) {
@@ -109,4 +136,5 @@ public class Main {
         }
         return "";
     }
+
 }
